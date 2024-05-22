@@ -1,0 +1,67 @@
+name: authentication-configuration-jar
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
+          settings-path: ${{ github.workspace }} # location for the settings.xml file
+
+      - name: Extract Project version
+        id: project
+        run: echo ::set-output name=version::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+
+      - name: Build JAR
+        run: |
+          mvn clean install
+        working-directory: /home/runner/work/authentication-configuration-jar/authentication-configuration-jar
+
+      - name: Set Up SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+        env:
+          SSH_PRIVATE_KEY: ${{secrets.V4_VPS_PRIVATE_KEY}}
+          HOST: ${{secrets.V4_HOST}}
+          PROJECT_VERSION: ${{steps.project.outputs.version}}
+
+      - name: Create Directory
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.V4_HOST }}
+          username: ${{ secrets.V4_USERNAME }}
+          key: ${{ secrets.V4_VPS_PRIVATE_KEY }}
+          PROJECT_VERSION: ${{steps.project.outputs.version}}
+          port: 22
+          script: |
+            mkdir -p /var/www/spring-repo/com/bloggios/authentication-config/authentication-configuration-jar
+            cd /var/www/spring-repo/com/bloggios/authentication-config/authentication-configuration-jar
+            rm ${{steps.project.outputs.version}} -r
+            mkdir ${{steps.project.outputs.version}}
+
+      - name: Copy JAR to VPS
+        run: |
+          pwd
+          scp -i ~/.ssh/id_rsa /home/runner/work/authentication-configuration-jar/authentication-configuration-jar/target/*.jar "$VPS_SERVER_USERNAME@$VPS_SERVER_IP:$VPS_SERVER_DESTINATION_DIR/$PROJECT_VERSION"
+        env:
+          VPS_SERVER_IP: ${{ secrets.V4_HOST }}
+          VPS_SERVER_USERNAME: ${{ secrets.V4_USERNAME }}
+          VPS_SERVER_DESTINATION_DIR: /var/www/spring-repo/com/bloggios/authentication-config/authentication-configuration-jar
+          PROJECT_VERSION: ${{steps.project.outputs.version}}

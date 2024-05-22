@@ -1,0 +1,7 @@
+security-config:
+  exclude:
+    paths:
+      - "/auth-path"
+  key-provider:
+    public-key: classpath:security/pubkey.pem
+    private-key: classpath:security/privkey.pem
