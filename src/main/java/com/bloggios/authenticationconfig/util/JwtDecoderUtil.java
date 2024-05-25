@@ -94,7 +94,7 @@ public class JwtDecoderUtil {
     public String extractClientIp(String token) {
         try {
             Jwt jwt = jwtDecoder.decode(token);
-            return jwt.getClaimAsString("clientIp");
+            return jwt.getClaimAsString("remoteAddress");
         } catch (Exception e) {
             logger.error("Exception Occurred while extracting Client IP from token with default message as : {}", e.getMessage());
             throw new AuthenticationConfigException("Unable to extract Client IP from the Token");
