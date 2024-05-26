@@ -29,6 +29,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,6 +49,7 @@ public class SecurityConfigProperties {
 
     private Exclude exclude;
     private KeyProvider keyProvider = new KeyProvider();
+    private Cookie cookie;
 
     @Getter
     @Setter
@@ -59,5 +61,12 @@ public class SecurityConfigProperties {
     @Setter
     public static class KeyProvider {
         private RSAPublicKey publicKey;
+    }
+
+    @Getter
+    @Setter
+    public static class Cookie {
+        private String cookieName;
+        private List<String> paths = new ArrayList<>();
     }
 }

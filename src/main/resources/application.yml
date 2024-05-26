@@ -2,6 +2,9 @@ security-config:
   exclude:
     paths:
       - "/auth-path"
+  cookie:
+    paths:
+      - "/data/refresh/**"
   key-provider:
     public-key: classpath:security/pubkey.pem
     private-key: classpath:security/privkey.pem
