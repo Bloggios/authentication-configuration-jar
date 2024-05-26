@@ -99,7 +99,7 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
             if (!CollectionUtils.isEmpty(cookiePaths)) {
                 isCookiePath = cookiePaths.stream().anyMatch(e -> antPathMatcher.match(e, request.getRequestURI()));
             }
-            if (!isExcludePath && !isCookiePath) {
+            if (!isExcludePath) {
                 if (token != null) {
                     try {
                         jwtDecoder.decode(token);
@@ -139,61 +139,61 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
                         return;
                     }
                     addAuthentication(request, token);
-                } else if (isCookiePath) {
-                    logger.info("Initiated Cookie Authentication of Incoming Request");
-                    Optional<Cookie> cookieOptional = getCookie(request, securityConfigProperties.getCookie().getCookieName());
-                    if (cookieOptional.isEmpty()) {
-                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                        response.setContentType("application/json");
-                        OutputStream output = response.getOutputStream();
-                        ObjectMapper mapper = new ObjectMapper();
-                        JwtErrorResponse jwtErrorResponse = JwtErrorResponse
-                                .builder()
-                                .message("Authentication cookie is not present the request")
-                                .build();
-                        mapper.writeValue(output, jwtErrorResponse);
-                        output.flush();
-                        return;
-                    }
-                    String refreshToken = cookieOptional.get().getValue();
-                    try {
-                        jwtDecoder.decode(refreshToken);
-                    } catch (JwtValidationException exception) {
-                        Collection<OAuth2Error> errors = exception.getErrors();
-                        boolean isExpired = false;
-                        for (OAuth2Error error : errors) {
-                            if (error.getDescription().contains("expired")) {
-                                isExpired = true;
-                                break;
-                            }
-                        }
-                        response.setStatus(isExpired ? HttpStatus.FORBIDDEN.value() : HttpStatus.UNAUTHORIZED.value());
-                        response.setContentType("application/json");
-                        OutputStream output = response.getOutputStream();
-                        ObjectMapper mapper = new ObjectMapper();
-                        JwtErrorResponse jwtErrorResponse = JwtErrorResponse
-                                .builder()
-                                .message(isExpired ? "Refresh Token is Expired in cookie" : exception.getMessage())
-                                .isExpired(isExpired)
-                                .build();
-                        mapper.writeValue(output, jwtErrorResponse);
-                        output.flush();
-                        return;
-                    } catch (BadJwtException exception) {
-                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                        response.setContentType("application/json");
-                        OutputStream output = response.getOutputStream();
-                        ObjectMapper mapper = new ObjectMapper();
-                        JwtErrorResponse jwtErrorResponse = JwtErrorResponse
-                                .builder()
-                                .message(exception.getMessage())
-                                .build();
-                        mapper.writeValue(output, jwtErrorResponse);
-                        output.flush();
-                        return;
-                    }
-                    addAuthentication(request, refreshToken);
                 }
+            } else if (isCookiePath) {
+                logger.info("Initiated Cookie Authentication of Incoming Request");
+                Optional<Cookie> cookieOptional = getCookie(request, securityConfigProperties.getCookie().getCookieName());
+                if (cookieOptional.isEmpty()) {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType("application/json");
+                    OutputStream output = response.getOutputStream();
+                    ObjectMapper mapper = new ObjectMapper();
+                    JwtErrorResponse jwtErrorResponse = JwtErrorResponse
+                            .builder()
+                            .message("Authentication cookie is not present the request")
+                            .build();
+                    mapper.writeValue(output, jwtErrorResponse);
+                    output.flush();
+                    return;
+                }
+                String refreshToken = cookieOptional.get().getValue();
+                try {
+                    jwtDecoder.decode(refreshToken);
+                } catch (JwtValidationException exception) {
+                    Collection<OAuth2Error> errors = exception.getErrors();
+                    boolean isExpired = false;
+                    for (OAuth2Error error : errors) {
+                        if (error.getDescription().contains("expired")) {
+                            isExpired = true;
+                            break;
+                        }
+                    }
+                    response.setStatus(isExpired ? HttpStatus.FORBIDDEN.value() : HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType("application/json");
+                    OutputStream output = response.getOutputStream();
+                    ObjectMapper mapper = new ObjectMapper();
+                    JwtErrorResponse jwtErrorResponse = JwtErrorResponse
+                            .builder()
+                            .message(isExpired ? "Refresh Token is Expired in cookie" : exception.getMessage())
+                            .isExpired(isExpired)
+                            .build();
+                    mapper.writeValue(output, jwtErrorResponse);
+                    output.flush();
+                    return;
+                } catch (BadJwtException exception) {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType("application/json");
+                    OutputStream output = response.getOutputStream();
+                    ObjectMapper mapper = new ObjectMapper();
+                    JwtErrorResponse jwtErrorResponse = JwtErrorResponse
+                            .builder()
+                            .message(exception.getMessage())
+                            .build();
+                    mapper.writeValue(output, jwtErrorResponse);
+                    output.flush();
+                    return;
+                }
+                addAuthentication(request, refreshToken);
             }
             filterChain.doFilter(request, response);
         } finally {
