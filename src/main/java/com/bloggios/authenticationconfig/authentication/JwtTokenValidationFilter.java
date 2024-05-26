@@ -99,7 +99,7 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
             if (!CollectionUtils.isEmpty(cookiePaths)) {
                 isCookiePath = cookiePaths.stream().anyMatch(e -> antPathMatcher.match(e, request.getRequestURI()));
             }
-            if (!isExcludePath) {
+            if (!isExcludePath && !isCookiePath) {
                 if (token != null) {
                     try {
                         jwtDecoder.decode(token);
