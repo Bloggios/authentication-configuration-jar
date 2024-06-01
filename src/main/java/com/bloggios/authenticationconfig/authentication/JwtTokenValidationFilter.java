@@ -143,20 +143,27 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
             } else if (isCookiePath) {
                 logger.info("Initiated Cookie Authentication of Incoming Request");
                 Optional<Cookie> cookieOptional = getCookie(request, securityConfigProperties.getCookie().getCookieName());
-                if (cookieOptional.isEmpty()) {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    response.setContentType("application/json");
-                    OutputStream output = response.getOutputStream();
-                    ObjectMapper mapper = new ObjectMapper();
-                    JwtErrorResponse jwtErrorResponse = JwtErrorResponse
-                            .builder()
-                            .message("Authentication cookie is not present the request")
-                            .build();
-                    mapper.writeValue(output, jwtErrorResponse);
-                    output.flush();
-                    return;
+                String cookieToken =  "";
+                if (cookieOptional.isPresent()) {
+                    cookieToken = cookieOptional.get().getValue();
+                } else {
+                    Optional<Cookie> refreshCookieOptional = getCookie(request, securityConfigProperties.getCookie().getRefreshCookieName());
+                    if (refreshCookieOptional.isEmpty()) {
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        response.setContentType("application/json");
+                        OutputStream output = response.getOutputStream();
+                        ObjectMapper mapper = new ObjectMapper();
+                        JwtErrorResponse jwtErrorResponse = JwtErrorResponse
+                                .builder()
+                                .message("Authentication Cookie is not present in header")
+                                .build();
+                        mapper.writeValue(output, jwtErrorResponse);
+                        output.flush();
+                        return;
+                    } else {
+                        cookieToken = refreshCookieOptional.get().getValue();
+                    }
                 }
-                String cookieToken = cookieOptional.get().getValue();
                 try {
                     jwtDecoder.decode(cookieToken);
                 } catch (JwtValidationException exception) {
@@ -188,32 +195,6 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
                     JwtErrorResponse jwtErrorResponse = JwtErrorResponse
                             .builder()
                             .message(exception.getMessage())
-                            .build();
-                    mapper.writeValue(output, jwtErrorResponse);
-                    output.flush();
-                    return;
-                }
-                if (Objects.isNull(jwtDecoderUtil.extractTokenType(cookieToken))) {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    response.setContentType("application/json");
-                    OutputStream output = response.getOutputStream();
-                    ObjectMapper mapper = new ObjectMapper();
-                    JwtErrorResponse jwtErrorResponse = JwtErrorResponse
-                            .builder()
-                            .message("Unable to extract token type from Cookie Token")
-                            .build();
-                    mapper.writeValue(output, jwtErrorResponse);
-                    output.flush();
-                    return;
-                }
-                if (!jwtDecoderUtil.extractTokenType(cookieToken).equals("cookie-token")) {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    response.setContentType("application/json");
-                    OutputStream output = response.getOutputStream();
-                    ObjectMapper mapper = new ObjectMapper();
-                    JwtErrorResponse jwtErrorResponse = JwtErrorResponse
-                            .builder()
-                            .message("Token type must be cookie for validation")
                             .build();
                     mapper.writeValue(output, jwtErrorResponse);
                     output.flush();

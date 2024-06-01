@@ -66,6 +66,7 @@ public class SecurityConfigProperties {
     @Getter
     @Setter
     public static class Cookie {
+        private String refreshCookieName;
         private String cookieName;
         private List<String> paths = new ArrayList<>();
     }
