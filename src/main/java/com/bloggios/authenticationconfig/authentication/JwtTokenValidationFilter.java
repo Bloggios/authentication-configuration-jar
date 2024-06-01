@@ -33,7 +33,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.context.DelegatingApplicationListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -145,11 +144,9 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
                 Optional<Cookie> cookieOptional = getCookie(request, securityConfigProperties.getCookie().getCookieName());
                 String cookieToken =  "";
                 if (cookieOptional.isPresent()) {
-                    System.err.println("Cookie Token");
                     cookieToken = cookieOptional.get().getValue();
                 } else {
                     Optional<Cookie> refreshCookieOptional = getCookie(request, securityConfigProperties.getCookie().getRefreshCookieName());
-                    System.err.println("Refresh Token");
                     if (refreshCookieOptional.isEmpty()) {
                         response.setStatus(HttpStatus.UNAUTHORIZED.value());
                         response.setContentType("application/json");
