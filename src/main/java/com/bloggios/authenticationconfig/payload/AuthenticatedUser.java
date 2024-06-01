@@ -50,4 +50,5 @@ public class AuthenticatedUser {
     private String email;
     private String clientIp;
     public String username;
+    private boolean isBadge;
 }

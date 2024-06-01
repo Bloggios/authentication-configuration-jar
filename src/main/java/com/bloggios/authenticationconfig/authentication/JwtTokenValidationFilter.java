@@ -240,12 +240,18 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
             String userId = jwtDecoderUtil.extractUserId(token);
             String email = jwtDecoderUtil.extractEmail(token);
             String username = jwtDecoderUtil.extractUsername(token);
+            String userBadge = jwtDecoderUtil.extractBadge(token);
+            boolean isBadge = false;
+            if (StringUtils.hasText(userBadge)) {
+                isBadge = Boolean.parseBoolean(userBadge);
+            }
             Collection<? extends GrantedAuthority> grantedAuthorities = jwtDecoderUtil.extractAuthorities(token);
             authenticatedUser.setUserId(userId);
             authenticatedUser.setEmail(email);
             authenticatedUser.setAuthorities(grantedAuthorities);
             authenticatedUser.setClientIp(jwtDecoderUtil.extractClientIp(token));
             authenticatedUser.setUsername(username);
+            authenticatedUser.setBadge(isBadge);
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(authenticatedUser, null, grantedAuthorities);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -111,13 +111,13 @@ public class JwtDecoderUtil {
         }
     }
 
-    public String extractTokenType(String token) {
+    public String extractBadge(String token) {
         try {
             Jwt jwt = jwtDecoder.decode(token);
-            return jwt.getClaimAsString("type");
+            return jwt.getClaimAsString("is-badge");
         } catch (Exception e) {
-            logger.error("Exception Occurred while extracting Token Type from token with default message as : {}", e.getMessage());
-            throw new AuthenticationConfigException("Unable to extract Token Type from the Token");
+            logger.error("Exception Occurred while extracting User Badge from token with default message as : {}", e.getMessage());
+            throw new AuthenticationConfigException("Unable to extract User Badge from the Token");
         }
     }
 }
