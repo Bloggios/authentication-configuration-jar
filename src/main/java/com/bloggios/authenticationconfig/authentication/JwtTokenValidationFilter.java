@@ -156,9 +156,9 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
                     output.flush();
                     return;
                 }
-                String refreshToken = cookieOptional.get().getValue();
+                String cookieToken = cookieOptional.get().getValue();
                 try {
-                    jwtDecoder.decode(refreshToken);
+                    jwtDecoder.decode(cookieToken);
                 } catch (JwtValidationException exception) {
                     Collection<OAuth2Error> errors = exception.getErrors();
                     boolean isExpired = false;
@@ -174,7 +174,7 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
                     ObjectMapper mapper = new ObjectMapper();
                     JwtErrorResponse jwtErrorResponse = JwtErrorResponse
                             .builder()
-                            .message(isExpired ? "Refresh Token is Expired in cookie" : exception.getMessage())
+                            .message(isExpired ? "Cookie Token is Expired in cookie" : exception.getMessage())
                             .isExpired(isExpired)
                             .build();
                     mapper.writeValue(output, jwtErrorResponse);
@@ -193,7 +193,20 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
                     output.flush();
                     return;
                 }
-                addAuthentication(request, refreshToken);
+                if (!jwtDecoderUtil.extractTokenType(cookieToken).equals("cookie-token")) {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType("application/json");
+                    OutputStream output = response.getOutputStream();
+                    ObjectMapper mapper = new ObjectMapper();
+                    JwtErrorResponse jwtErrorResponse = JwtErrorResponse
+                            .builder()
+                            .message("Token type must be cookie for validation")
+                            .build();
+                    mapper.writeValue(output, jwtErrorResponse);
+                    output.flush();
+                    return;
+                }
+                addAuthentication(request, cookieToken);
             }
             filterChain.doFilter(request, response);
         } finally {
