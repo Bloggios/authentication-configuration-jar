@@ -145,9 +145,11 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
                 Optional<Cookie> cookieOptional = getCookie(request, securityConfigProperties.getCookie().getCookieName());
                 String cookieToken =  "";
                 if (cookieOptional.isPresent()) {
+                    System.err.println("Cookie Token");
                     cookieToken = cookieOptional.get().getValue();
                 } else {
                     Optional<Cookie> refreshCookieOptional = getCookie(request, securityConfigProperties.getCookie().getRefreshCookieName());
+                    System.err.println("Refresh Token");
                     if (refreshCookieOptional.isEmpty()) {
                         response.setStatus(HttpStatus.UNAUTHORIZED.value());
                         response.setContentType("application/json");
