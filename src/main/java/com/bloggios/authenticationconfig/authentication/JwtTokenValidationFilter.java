@@ -193,6 +193,19 @@ public class JwtTokenValidationFilter extends OncePerRequestFilter {
                     output.flush();
                     return;
                 }
+                if (Objects.isNull(jwtDecoderUtil.extractTokenType(cookieToken))) {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setContentType("application/json");
+                    OutputStream output = response.getOutputStream();
+                    ObjectMapper mapper = new ObjectMapper();
+                    JwtErrorResponse jwtErrorResponse = JwtErrorResponse
+                            .builder()
+                            .message("Unable to extract token type from Cookie Token")
+                            .build();
+                    mapper.writeValue(output, jwtErrorResponse);
+                    output.flush();
+                    return;
+                }
                 if (!jwtDecoderUtil.extractTokenType(cookieToken).equals("cookie-token")) {
                     response.setStatus(HttpStatus.UNAUTHORIZED.value());
                     response.setContentType("application/json");
