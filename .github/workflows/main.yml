@@ -38,16 +38,16 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
         env:
-          SSH_PRIVATE_KEY: ${{secrets.V4_VPS_PRIVATE_KEY}}
-          HOST: ${{secrets.V4_HOST}}
+          SSH_PRIVATE_KEY: ${{secrets.V8_VPS_PRIVATE_KEY}}
+          HOST: ${{secrets.V8_HOST}}
           PROJECT_VERSION: ${{steps.project.outputs.version}}
 
       - name: Create Directory
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.V4_HOST }}
-          username: ${{ secrets.V4_USERNAME }}
-          key: ${{ secrets.V4_VPS_PRIVATE_KEY }}
+          host: ${{ secrets.V8_HOST }}
+          username: ${{ secrets.V8_USERNAME }}
+          key: ${{ secrets.V8_VPS_PRIVATE_KEY }}
           PROJECT_VERSION: ${{steps.project.outputs.version}}
           port: 22
           script: |
@@ -61,7 +61,7 @@ jobs:
           pwd
           scp -i ~/.ssh/id_rsa /home/runner/work/authentication-configuration-jar/authentication-configuration-jar/target/*.jar "$VPS_SERVER_USERNAME@$VPS_SERVER_IP:$VPS_SERVER_DESTINATION_DIR/$PROJECT_VERSION"
         env:
-          VPS_SERVER_IP: ${{ secrets.V4_HOST }}
-          VPS_SERVER_USERNAME: ${{ secrets.V4_USERNAME }}
+          VPS_SERVER_IP: ${{ secrets.V8_HOST }}
+          VPS_SERVER_USERNAME: ${{ secrets.V8_USERNAME }}
           VPS_SERVER_DESTINATION_DIR: /var/www/spring-repo/com/bloggios/authentication-config/authentication-configuration-jar
           PROJECT_VERSION: ${{steps.project.outputs.version}}
